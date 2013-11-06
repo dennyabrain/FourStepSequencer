@@ -17,6 +17,7 @@
 #include <Oscil.h> // oscillator template
 #include <tables/saw2048_int8.h> // sine table for oscillator
 #include <EventDelay.h>
+#include <LowPassFilter.h>
 
 
 // use: Oscil <table_size, update_rate> oscilName (wavetable), look in .h file of table #included above
@@ -27,6 +28,9 @@ Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> Saw4(SAW2048_DATA);
 
 int seq=0;
 EventDelay stepRate(500);
+int cutoff=0;
+
+LowPassFilter lpf;
 
 // use #define for CONTROL_RATE, not a constant
 #define CONTROL_RATE 64 // powers of 2 please
@@ -39,6 +43,7 @@ void setup(){
   Saw3.setFreq(500);
   Saw4.setFreq(340);
   stepRate.start();
+  lpf.setResonance(200);
 }
 
 
@@ -48,25 +53,30 @@ void updateControl(){
   {
     stepRate.start();
     seq=(seq+1)%4;
+    cutoff=(cutoff+1)%2000;
   }
+
+  lpf.setCutoffFreq(cutoff);
 }
 
 
 int updateAudio(){
+  float osc;
   switch(seq){
     case 0:
-      return Saw1.next(); // return an int signal centred around 0
+      return lpf.next(Saw1.next()); // return an int signal centred around 0
       break;
     case 1:
-      return Saw2.next(); // return an int signal centred around 0
+      return lpf.next(Saw2.next()); // return an int signal centred around 0
       break;
     case 2:
-      return Saw3.next(); // return an int signal centred around 0
+      return lpf.next(Saw3.next()); // return an int signal centred around 0
       break;
     case 3:
-      return Saw4.next(); // return an int signal centred around 0
+      return lpf.next(Saw4.next()); // return an int signal centred around 0
       break;
   }
+ 
 }
 
 
