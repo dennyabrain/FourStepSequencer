@@ -25,8 +25,15 @@ Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> Saw1(SAW2048_DATA);
 Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> Saw2(SAW2048_DATA);
 Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> Saw3(SAW2048_DATA);
 Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> Saw4(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawAM(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFM1(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFM2(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFM3(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFM4(SAW2048_DATA);
+Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFMmod(SAW2048_DATA);
 
 int seq=0;
+boolean am=false,fm=true;
 EventDelay stepRate(500);
 int cutoff=0;
 
@@ -42,8 +49,15 @@ void setup(){
   Saw2.setFreq(220);
   Saw3.setFreq(500);
   Saw4.setFreq(340);
+  SawAM.setFreq(1500);
+  SawFMmod.setFreq(1000);
   stepRate.start();
   lpf.setResonance(200);
+  //FM OSCs
+  SawFM1.setFreq(440+(2000*SawFMmod.next()));
+  SawFM2.setFreq(220+(2000*SawFMmod.next()));
+  SawFM3.setFreq(500+(2000*SawFMmod.next()));
+  SawFM4.setFreq(340+(2000*SawFMmod.next()));
 }
 
 
@@ -53,10 +67,15 @@ void updateControl(){
   {
     stepRate.start();
     seq=(seq+1)%4;
-    cutoff=(cutoff+1)%2000;
+    //cutoff=(cutoff+1)%2000;
   }
 
-  lpf.setCutoffFreq(cutoff);
+  lpf.setCutoffFreq(15000);
+  
+  SawFM1.setFreq(1000+(20*SawFMmod.next()));
+  SawFM2.setFreq(220+(20*SawFMmod.next()));
+  SawFM3.setFreq(500+(20*SawFMmod.next()));
+  SawFM4.setFreq(340+(20*SawFMmod.next()));
 }
 
 
@@ -64,16 +83,36 @@ int updateAudio(){
   float osc;
   switch(seq){
     case 0:
-      return lpf.next(Saw1.next()); // return an int signal centred around 0
+      if(am){
+      return lpf.next((Saw1.next()*SawAM.next())>>8); // return an int signal centred around 0
+      }
+      if(fm){
+      return lpf.next((SawFM1.next()));
+      }
       break;
     case 1:
-      return lpf.next(Saw2.next()); // return an int signal centred around 0
+      if(am){
+      return lpf.next((Saw2.next()*SawAM.next())>>8); // return an int signal centred around 0
+      }
+      if(fm){
+        return lpf.next((SawFM2.next()));
+      }
       break;
     case 2:
-      return lpf.next(Saw3.next()); // return an int signal centred around 0
+      if(am){
+      return lpf.next((Saw3.next()*SawAM.next())>>8); // return an int signal centred around 0
+      }
+      if(fm){
+        return lpf.next((SawFM3.next()));
+      }
       break;
     case 3:
-      return lpf.next(Saw4.next()); // return an int signal centred around 0
+      if(am){
+      return lpf.next((Saw4.next()*SawAM.next())>>8); // return an int signal centred around 0
+      }
+      if(fm){
+        return lpf.next((SawFM4.next()));
+      }
       break;
   }
  
