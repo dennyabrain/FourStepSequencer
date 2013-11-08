@@ -33,9 +33,13 @@ Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFM4(SAW2048_DATA);
 Oscil <SAW2048_NUM_CELLS, AUDIO_RATE> SawFMmod(SAW2048_DATA);
 
 int seq=0;
-boolean am=false,fm=true;
+int sawOneFreq, sawTwoFreq,sawThreeFreq,sawFourFreq=0,sawAMFreq=0;
+int knobOne,knobTwo,knobThree,knobFour=0;
+int pKnobOne,pKnobTwo,pKnobThree,pKnobFour=0;
+boolean am=true,fm=false;
 EventDelay stepRate(500);
 int cutoff=0;
+int mode=3;
 
 LowPassFilter lpf;
 
@@ -45,11 +49,8 @@ LowPassFilter lpf;
 
 void setup(){
   startMozzi(CONTROL_RATE); // set a control rate of 64 (powers of 2 please)
-  Saw1.setFreq(440); // set the frequency
-  Saw2.setFreq(220);
-  Saw3.setFreq(500);
-  Saw4.setFreq(340);
-  SawAM.setFreq(1500);
+  
+  SawAM.setFreq(0);
   SawFMmod.setFreq(1000);
   stepRate.start();
   lpf.setResonance(200);
@@ -58,11 +59,36 @@ void setup(){
   SawFM2.setFreq(220+(2000*SawFMmod.next()));
   SawFM3.setFreq(500+(2000*SawFMmod.next()));
   SawFM4.setFreq(340+(2000*SawFMmod.next()));
+  knobOne = mozziAnalogRead(0);
+  knobOne = map(knobOne,0,1023,10,1000);
+  knobTwo = mozziAnalogRead(1);
+  knobTwo = map(knobTwo,0,1023,10,1000);
+  knobThree = mozziAnalogRead(2);
+  knobThree = map(knobThree,0,1023,10,1000);
+  knobFour = mozziAnalogRead(3);
+  knobFour = map(knobFour,0,1023,10,1000);
+  Saw1.setFreq(knobOne);
+  Saw2.setFreq(knobTwo);
+  Saw3.setFreq(knobThree);
+  Saw4.setFreq(knobFour);
 }
 
 
 void updateControl(){
   // put changing controls in here
+  knobOne = mozziAnalogRead(0);
+    knobOne = map(knobOne,0,1023,10,1000);
+    knobTwo = mozziAnalogRead(1);
+    knobTwo = map(knobTwo,0,1023,10,1000);
+    knobThree = mozziAnalogRead(2);
+    knobThree = map(knobThree,0,1023,10,1000);
+    knobFour = mozziAnalogRead(3);
+    knobFour = map(knobFour,0,1023,10,1000);
+    Saw1.setFreq(knobOne);
+    Saw2.setFreq(knobTwo);
+    Saw3.setFreq(knobThree);
+    Saw4.setFreq(knobFour);
+  
   if(stepRate.ready())
   {
     stepRate.start();
@@ -70,7 +96,28 @@ void updateControl(){
     //cutoff=(cutoff+1)%2000;
   }
 
-  lpf.setCutoffFreq(15000);
+  if(mode==0){
+    knobOne = mozziAnalogRead(0);
+    knobOne = map(knobOne,0,1023,10,1000);
+    knobTwo = mozziAnalogRead(1);
+    knobTwo = map(knobTwo,0,1023,10,1000);
+    knobThree = mozziAnalogRead(2);
+    knobThree = map(knobThree,0,1023,10,1000);
+    knobFour = mozziAnalogRead(3);
+    knobFour = map(knobFour,0,1023,10,1000);
+    Saw1.setFreq(knobOne);
+    Saw2.setFreq(knobTwo);
+    Saw3.setFreq(knobThree);
+    Saw4.setFreq(knobFour);
+  }
+  
+  else if(mode==3){
+    sawAMFreq = mozziAnalogRead(3);
+    sawAMFreq = map(sawAMFreq,0,1023,0,2000);
+    SawAM.setFreq(sawAMFreq);    
+  }
+
+  lpf.setCutoffFreq(100);
   
   SawFM1.setFreq(1000+(20*SawFMmod.next()));
   SawFM2.setFreq(220+(20*SawFMmod.next()));
@@ -84,7 +131,9 @@ int updateAudio(){
   switch(seq){
     case 0:
       if(am){
-      return lpf.next((Saw1.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return lpf.next((Saw1.next()*SawAM.next())>>8); // return an int signal centred around 0
+      return ((Saw1.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return Saw1.next();
       }
       if(fm){
       return lpf.next((SawFM1.next()));
@@ -92,7 +141,9 @@ int updateAudio(){
       break;
     case 1:
       if(am){
-      return lpf.next((Saw2.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return lpf.next((Saw2.next()*SawAM.next())>>8); // return an int signal centred around 0
+      return ((Saw2.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return Saw2.next();
       }
       if(fm){
         return lpf.next((SawFM2.next()));
@@ -100,7 +151,9 @@ int updateAudio(){
       break;
     case 2:
       if(am){
-      return lpf.next((Saw3.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return lpf.next((Saw3.next()*SawAM.next())>>8); // return an int signal centred around 0
+      return ((Saw3.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return Saw3.next();
       }
       if(fm){
         return lpf.next((SawFM3.next()));
@@ -108,7 +161,9 @@ int updateAudio(){
       break;
     case 3:
       if(am){
-      return lpf.next((Saw4.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return lpf.next((Saw4.next()*SawAM.next())>>8); // return an int signal centred around 0
+      return ((Saw4.next()*SawAM.next())>>8); // return an int signal centred around 0
+      //return Saw4.next();
       }
       if(fm){
         return lpf.next((SawFM4.next()));
